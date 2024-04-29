@@ -1,0 +1,74 @@
+def banqueiro(n, m, disponiveis, maximo, alocacao_atual):
+    # Inicializar work e finish
+    trabalho = disponiveis.copy()
+    finalizados = [False] * n
+
+    # Inicializar a matriz de necessidade
+    necessidade = [[maximo[i][j] - alocacao_atual[i][j] for j in range(m)] for i in range(n)]
+
+    # Loop até que todos os processos estejam finalizados
+    while True:
+        # Passo 1: Encontrar um processo que pode ser executado
+        processo_encontrado = False
+        for i in range(n):
+            if not finalizados[i]:
+                # Passo 2: Verificar se o processo pode ser executado
+                pode_executar = all(necessidade[i][j] <= trabalho[j] for j in range(m))
+                if pode_executar:
+                    processo_encontrado = True
+                    finalizados[i] = True
+                    for j in range(m):
+                        trabalho[j] += alocacao_atual[i][j]
+                    break
+
+        # Passo 4: Se todos os processos estão finalizados, o sistema está em um estado seguro
+        if not processo_encontrado:
+            if all(finalizados):
+                print("O sistema está em um estado seguro.")
+            else:
+                print("O sistema está em um estado inseguro.")
+            break
+
+def detectar_deadlock(recursos_disponiveis, matriz_alocacao, matriz_requisicao, matriz_maxima):
+    num_processos = len(matriz_alocacao)
+    num_recursos = len(recursos_disponiveis)
+
+    # Chamar a função do banqueiro
+    banqueiro(num_processos, num_recursos, recursos_disponiveis, matriz_maxima, matriz_alocacao)
+
+    # Continuar com a detecção de deadlock
+    deadlock = False
+    for i in range(num_processos):
+        if all(matriz_requisicao[i][j] <= recursos_disponiveis[j] for j in range(num_recursos)):
+            deadlock = True
+            print(f"Processo P{i} está em deadlock.")
+            break
+
+    if not deadlock:
+        print("Não há deadlock.")
+
+# Exemplo de uso
+matriz_maxima = [ # Máxima alocação de recursos para cada processo
+    [7, 5, 3],
+    [3, 2, 2],
+    [9, 0, 2],
+    [2, 2, 2],
+    [4, 3, 3]
+]
+recursos_disponiveis = [0, 0, 0]
+matriz_alocacao = [
+    [0, 1, 0],
+    [2, 0, 0],
+    [3, 0, 3],
+    [2, 1, 1],
+    [0, 0, 2]
+]
+matriz_requisicao = [
+    [0, 0, 0],
+    [2, 0, 2],
+    [0, 0, 0],
+    [1, 0, 0],
+    [0, 0, 2]
+]
+
+detectar_deadlock(recursos_disponiveis, matriz_alocacao, matriz_requisicao, matriz_maxima)
