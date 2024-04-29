@@ -1,0 +1,133 @@
+from collections import deque  # Importa a classe deque para criar uma fila
+
+# Definição da classe Processo
+class Processo:
+    def __init__(self, nome, duracao_pico, prioridade):
+        self.nome = nome
+        self.duracao_pico = duracao_pico
+        self.prioridade = prioridade
+
+# Função para executar o algoritmo FCFS (First-Come, First-Served)
+def first_come_first_served(processos):
+    # Inicializa variáveis de tempo
+    tempo_espera = 0
+    tempo_resposta = 0
+    tempo_processamento = 0
+    tempo_turnaround = 0
+
+    # Imprime cabeçalho
+    print("\t\t\t\t\tResultado do Escalonamento FCFS:")
+    print("Processo\t\tEspera\t\t\tResposta\t\t\tProcessamento\tTurnaround")
+
+    for processo in processos:
+        # Calcula o tempo de espera para o processo atual
+        tempo_espera_atual = max(tempo_espera, 0)
+        tempo_espera += processo.duracao_pico
+        
+        # O tempo de resposta é igual ao tempo de processamento para FCFS
+        tempo_resposta = processo.duracao_pico
+        
+        # Tempo de processamento é igual à duração do pico do processo
+        tempo_processamento = processo.duracao_pico
+        
+        # Tempo de turnaround é igual ao tempo de processamento para FCFS
+        tempo_turnaround += processo.duracao_pico
+
+        # Imprime os resultados para o processo atual
+        print(f"{processo.nome}\t\t\t{tempo_espera_atual} ms\t\t\t{tempo_resposta} ms\t\t\t{tempo_processamento} ms\t\t\t{tempo_turnaround} ms")
+
+# Função para executar o algoritmo SJF (Shortest Job First)
+def shortest_job_first(processos):
+    # Ordena os processos com base na duração do pico (menor primeiro)
+    processos_ordenados = sorted(processos, key=lambda x: (x.duracao_pico, processos.index(x)))
+
+    # Inicializa variáveis de tempo
+    tempo_espera = 0
+    tempo_resposta = 0
+    tempo_processamento = 0
+    tempo_turnaround = 0
+
+    # Imprime cabeçalho
+    print("\n\t\t\t\t\tResultado do Escalonamento SJF:")
+    print("Processo\t\tEspera\t\t\tResposta\t\t\tProcessamento\tTurnaround")
+
+    for processo in processos_ordenados:
+        # Calcula o tempo de espera para o processo atual
+        tempo_espera_atual = max(tempo_espera, 0)
+        tempo_espera += processo.duracao_pico
+        
+        # O tempo de resposta é igual ao tempo de processamento para SJF
+        tempo_resposta = processo.duracao_pico
+        
+        # Tempo de processamento é igual à duração do pico do processo
+        tempo_processamento = processo.duracao_pico
+        
+        # Tempo de turnaround é igual ao tempo de processamento para SJF
+        tempo_turnaround += processo.duracao_pico
+
+        # Imprime os resultados para o processo atual
+        print(f"{processo.nome}\t\t\t{tempo_espera_atual} ms\t\t\t{tempo_resposta} ms\t\t\t{tempo_processamento} ms\t\t\t{tempo_turnaround} ms")
+
+# Função para executar o algoritmo Round Robin
+def round_robin(processos, quantum):
+    fila = deque(processos)  # Cria uma fila de processos
+    tempo_executado = {processo.nome: 0 for processo in processos}  # Dicionário para armazenar o tempo já executado de cada processo
+    tempo_resposta = {processo.nome: None for processo in processos}  # Dicionário para armazenar o tempo de resposta de cada processo
+    tempo_espera = {processo.nome: 0 for processo in processos}  # Dicionário para armazenar o tempo de espera de cada processo
+    tempo_turnaround = {processo.nome: 0 for processo in processos}  # Dicionário para armazenar o tempo de turnaround de cada processo
+    tempo_atual = 0  # Tempo atual de execução
+
+    # Imprime cabeçalho
+    print("\n\t\t\tResultado do Escalonamento Round Robin (Quantum = {}):".format(quantum))
+    print("Processo\t\tEspera\t\tResposta\t\tProcessamento\t\tTurnaround")
+
+    while fila:
+        for processo in fila:
+            # Verifica se o processo já iniciou
+            if tempo_resposta[processo.nome] is None:
+                tempo_resposta[processo.nome] = max(0, tempo_atual - processo.duracao_pico)
+            
+            # Calcula o tempo já executado do processo
+            tempo_executado_processo = min(processo.duracao_pico - tempo_executado[processo.nome], quantum)
+            
+            # Atualiza o tempo já executado do processo
+            tempo_executado[processo.nome] += tempo_executado_processo
+            
+            # Atualiza o tempo atual de execução
+            tempo_atual += tempo_executado_processo
+            
+            # Verifica se o processo terminou
+            if tempo_executado[processo.nome] >= processo.duracao_pico:
+                tempo_turnaround[processo.nome] = tempo_atual
+                tempo_espera[processo.nome] = tempo_turnaround[processo.nome] - processo.duracao_pico
+                fila.remove(processo)  # Remove o processo da fila se terminou
+                break
+    
+    # Imprime os resultados para cada processo
+    for processo in processos:
+        # Calcula o tempo de resposta para Round Robin
+        if quantum > 0:
+            tempo_resposta_calculado = processo.duracao_pico + tempo_espera[processo.nome]
+        else:
+            tempo_resposta_calculado = tempo_resposta[processo.nome]
+        print(f"{processo.nome}\t\t\t{tempo_espera[processo.nome]} ms\t\t\t{tempo_resposta_calculado} ms\t\t\t{processo.duracao_pico} ms\t\t\t{tempo_turnaround[processo.nome]} ms")
+
+# Declarar variáveis de processo
+processos = [
+    Processo('P1', 10, 3),
+    Processo('P2', 1, 1),
+    Processo('P3', 2, 3),
+    Processo('P4', 1, 4),
+    Processo('P5', 5, 2)
+]
+
+# Executar o algoritmo FCFS
+first_come_first_served(processos)
+
+# Executar o algoritmo SJF
+shortest_job_first(processos)
+
+# Definir o quantum para o algoritmo Round Robin
+quantum = 1
+# Executar o algoritmo Round Robin
+round_robin(processos, quantum)
