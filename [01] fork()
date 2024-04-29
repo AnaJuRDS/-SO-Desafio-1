@@ -1,0 +1,66 @@
+import os  # Módulo para interação com o sistema operacional
+import sys  # Módulo para acesso a algumas variáveis e funções específicas do interpretador Python
+import math  # Módulo para operações matemáticas
+
+def calcular_soma_subconjunto(numeros, inicio, fim):
+    """
+    Calcula a soma dos números em um subconjunto específico.
+
+    Args:
+        numeros (list): Lista de números inteiros.
+        inicio (int): Índice de início do subconjunto.
+        fim (int): Índice de fim do subconjunto.
+
+    Returns:
+        int: Soma dos números no subconjunto.
+    """
+    subconjunto = numeros[inicio:fim]  # Seleciona os números no intervalo [inicio, fim)
+    soma = sum(subconjunto)  # Calcula a soma dos números
+    return soma
+
+def calcular_soma_total(numeros, n_filhos):
+    """
+    Divide a lista de números em subconjuntos e calcula a soma total usando processos filhos.
+
+    Args:
+        numeros (list): Lista de números inteiros.
+        n_filhos (int): Número de processos filhos a serem criados.
+    """
+    tamanho_subconjunto = math.ceil(len(numeros) / n_filhos)  # Tamanho de cada subconjunto
+
+    pids_filhos = []  # Lista para armazenar os PIDs dos filhos
+
+    # Verifica se o sistema operacional suporta a função fork()
+    if hasattr(os, 'fork'):
+        for i in range(n_filhos):
+            inicio = i * tamanho_subconjunto
+            fim = min((i + 1) * tamanho_subconjunto, len(numeros))  # Garante que o último subconjunto não ultrapasse o tamanho da lista
+
+            print("Filho {}: Intervalo {}-{}".format(i+1, inicio, fim-1))
+
+            pid_filho = os.fork()
+
+            if pid_filho == 0:
+                # Processo filho
+                soma_subconjunto = calcular_soma_subconjunto(numeros, inicio, fim)
+                os._exit(soma_subconjunto)  # Encerra o processo filho com a soma do subconjunto
+            else:
+                # Processo pai armazena o PID do filho
+                pids_filhos.append(pid_filho)
+
+        # Processo pai espera pelos processos filhos e obtém as somas dos subconjuntos
+        soma_total = 0
+        for pid_filho in pids_filhos:
+            pid, status = os.waitpid(pid_filho, 0)
+            soma_subconjunto = os.WEXITSTATUS(status)  # Obtém o valor de saída do processo filho
+            soma_total += soma_subconjunto
+
+        print("Pai (PID {}): Soma total: {}".format(os.getpid(), soma_total))
+    else:
+        print("O sistema operacional atual não suporta a função fork().")
+
+if __name__ == "__main__":
+    numeros = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]  # Lista de números inteiros
+    n_filhos = 2  # Número de processos filhos
+
+    calcular_soma_total(numeros, n_filhos)
