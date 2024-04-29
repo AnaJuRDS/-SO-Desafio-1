@@ -1,0 +1,60 @@
+def detectar_deadlock(recursos_disponiveis, matriz_alocacao, matriz_requisicao): # similar ao método de gráfico de espera
+    # Número de processos (linhas) e tipos de recursos (colunas)
+    num_processos = len(matriz_alocacao)
+    num_recursos = len(recursos_disponiveis)
+
+    # Inicializar uma lista para acompanhar quais processos foram finalizados
+    processos_finalizados = [False] * num_processos
+
+    # Verificar se algum processo está em deadlock
+    deadlock = True  # Suponha inicialmente que há deadlock
+    while deadlock:
+        deadlock = False  # Resetar a flag de deadlock a cada iteração
+
+        # Percorrer cada processo
+        for i in range(num_processos):
+            # Verificar se o processo i está finalizado
+            if not processos_finalizados[i]:
+                # Verificar se o processo pode ser finalizado
+                processo_pode_finalizar = True
+                for j in range(num_recursos):
+                    # Verificar se o processo pode obter todos os recursos que precisa
+                    if matriz_requisicao[i][j] > recursos_disponiveis[j]:
+                        processo_pode_finalizar = False
+                        break
+
+                if processo_pode_finalizar:
+                    # Processo pode ser finalizado
+                    deadlock = False  # Não há deadlock
+                    processos_finalizados[i] = True  # Marcar o processo como finalizado
+                    # Liberar recursos alocados pelo processo finalizado
+                    for j in range(num_recursos):
+                        recursos_disponiveis[j] += matriz_alocacao[i][j]
+                    print(f"Processo P{i} finalizado. Recursos disponíveis: {recursos_disponiveis}")
+                    break  # Ir para o próximo processo
+
+    # Verificar se algum processo está em deadlock
+    processos_em_deadlock = []
+    for i, finalizado in enumerate(processos_finalizados):
+        if not finalizado:
+            processos_em_deadlock.append(f"P{i}")
+    print("Processos em deadlock:", processos_em_deadlock)
+
+# Exemplo de uso
+recursos_disponiveis = [0, 0, 0]
+matriz_alocacao = [
+    [0, 1, 0],
+    [2, 0, 0],
+    [3, 0, 3],
+    [2, 1, 1],
+    [0, 0, 2]
+]
+matriz_requisicao = [
+    [0, 0, 0],
+    [2, 0, 2],
+    [0, 0, 0],
+    [1, 0, 0],
+    [0, 0, 2]
+]
+
+detectar_deadlock(recursos_disponiveis, matriz_alocacao, matriz_requisicao)
